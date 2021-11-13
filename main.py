@@ -92,6 +92,14 @@ def assign_to_elevator(building: Building, call: CallForElevator):  # FINISH THI
     return call.waiting_time
 
 
+def add_call_to_elevator(call: CallForElevator, elev: Elevator, call_list: list) -> None:  # adds call src and dest to the elevators call list
+    pass
+
+
+def future_call_list(call_list: list, time: float) -> list:  # returns what the call list will look like at the given time
+    return []
+
+
 if __name__ == '__main__':
 
     # get building from json
