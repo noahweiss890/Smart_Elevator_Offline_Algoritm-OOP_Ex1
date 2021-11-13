@@ -26,13 +26,13 @@ class Elevator:
         return str({"_id": self.id, "_speed": + self.speed, "_minFloor": self.min_floor, "_maxFloor": self.max_floor, "_closeTime": self.close_time, "_openTime": self.open_time, "_startTime": self.start_time, "_stopTime": self.stop_time})
 
 
-class Call_For_Elevator:
+class CallForElevator:
     def __init__(self, call: list):
         self.time = float(call[1])
         self.src = int(call[2])
         self.dest = int(call[3])
         self.allocated_to = int(call[5])
-        self.waiting_time = -1
+        self.waiting_time = (self.dest - self.src) > 0
 
     def time_to_complete_call(self, elev: Elevator) -> float:
         return 1 - (self.time - int(self.time)) + 1 + elev.start_time + ((abs(self.src - self.dest) - 1) / elev.speed) + elev.stop_time + elev.open_time + elev.close_time
@@ -56,7 +56,7 @@ def pos_in_range(elev: Elevator, going_from: int, going_to: int, q_time: float, 
         return floor
     t_time += elev.start_time
     # elevator already started so now can only stop at next floor up or down depending on direction
-    if t_time > q_time and (going_from < going_to):  # elevaor is going up
+    if t_time > q_time and (going_from < going_to):  # elevator is going up
         return floor + 1
     if t_time > q_time and (going_from > going_to):  # elevator is going down
         return floor -1
@@ -82,10 +82,10 @@ def pos_at_time(elev: Elevator, call_list: list, time: float) -> int:  # FINISH 
             total_time += (call_list[i].get("call").time - total_time)
         total_time = total_time + time_floor2floor(elev, call_list[i].get("floor"), call_list[i+1].get("floor"))
         if query_time <= total_time:  # found range
-            return pos_in_range(elev, call_list[i].get("floor"), call_list[i+1].get("floor"), query_time, (total_time - (time_floor2floor(elev, call_list[i].get("floor"), call_list[i+1].get("floor"))))) #step back in total_time
+            return pos_in_range(elev, call_list[i].get("floor"), call_list[i+1].get("floor"), query_time, (total_time - (time_floor2floor(elev, call_list[i].get("floor"), call_list[i+1].get("floor")))))  # step back in total_time
 
 
-def assign_to_elevator(building: Building, call: Call_For_Elevator):  # FINISH THIS
+def assign_to_elevator(building: Building, call: CallForElevator):  # FINISH THIS
     ans = 0
     for elev in building.elevators:
         call.waiting_time = call.time_to_complete_call(elev)
@@ -107,19 +107,19 @@ if __name__ == '__main__':
     # get calls from csv
     with open(sys.argv[2], "r") as c:  # in order to take all of the elevator calls from csv
         reader = csv.reader(c)
-        calls_list = [Call_For_Elevator(line) for line in reader]
+        calls_list = [CallForElevator(line) for line in reader]
 
     # for call in call_list:
     #     call.allocated_to = 0
 
     elevator_calls = {}
     elevator_floor_calls = {}
-    for i in range(len(building.elevators)):
-        elevator_calls[i] = []
-        elevator_floor_calls = []
+    for i in building.elevators:
+        elevator_calls[i.id] = []
+        elevator_floor_calls[i.id] = []
 
-    for call in calls_list:
-        assign_to_elevator(call)
+    # for call in calls_list:
+    #     assign_to_elevator(call)
 
     with open("test.csv", "w") as c:
         writer = csv.writer(c)
