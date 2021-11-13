@@ -44,48 +44,45 @@ class Call_For_Elevator:
         return str(["Elevator call", self.time, self.src, self.dest, 0, self.allocated_to])
 
 
-def time_floor2floor(elev: Elevator, a:int, b:int) -> float:
+def time_floor2floor(elev: Elevator, a: int, b: int) -> float:
     return elev.close_time + elev.start_time + (abs(a-b)/elev.speed) + elev.stop_time + elev.open_time
+
 
 def pos_in_range(elev: Elevator, going_from: int, going_to: int, q_time: float, t_time: float) -> int:
     floor = going_from
-    #first add close_time and see if that makes a difference
+    # first add close_time and see if that makes a difference
     t_time += elev.close_time
     if t_time > q_time:
         return floor
     t_time += elev.start_time
     # elevator already started so now can only stop at next floor up or down depending on direction
-    if t_time > q_time and (going_from < going_to): #elevaor is going up
+    if t_time > q_time and (going_from < going_to):  # elevaor is going up
         return floor + 1
-    if t_time > q_time and (going_from > going_to): #elevator is going down
+    if t_time > q_time and (going_from > going_to):  # elevator is going down
         return floor -1
-    #now going through in-between floors
+    # now going through in-between floors
     for fl in range(abs(going_from - going_to)):
-        if going_from < going_to: #elevator is going up
+        if going_from < going_to:  # elevator is going up
             t_time += (1/elev.speed)
-            floor = floor + 1 #'pos' increases by one
-        if going_from > going_to: #elevator is going down
+            floor = floor + 1  # 'pos' increases by one
+        if going_from > going_to:  # elevator is going down
             t_time += (1 / elev.speed)
-            floor = floor - 1 #'pos' decreases by one
+            floor = floor - 1  # 'pos' decreases by one
         if t_time >= q_time:
             return floor
 
 
 def pos_at_time(elev: Elevator, call_list: list, time: float) -> int:  # FINISH THIS
     query_time = time
-    #start elevator at time first call comes in + time to travel from 0 to first src
+    # start elevator at time first call comes in + time to travel from 0 to first src
     total_time = calls_list[0].get("call").time + time_floor2floor(elev, 0, call_list[0].get("floor"))
     for i in range(len(call_list)-1):
-        #if there is a gap in the call_list because of timing
+        # if there is a gap in the call_list because of timing
         if total_time < call_list[i].get("call").time:
             total_time += (call_list[i].get("call").time - total_time)
         total_time = total_time + time_floor2floor(elev, call_list[i].get("floor"), call_list[i+1].get("floor"))
-        if query_time <= total_time: #found range
-            return pos_in_range(elev, call_list[i].get("floor"), call_list[i+1].get("floor"), query_time, (total_time-(time_floor2floor(elev, call_list[i].get("floor"), call_list[i+1].get("floor")))) #step back in total_time
-
-
-
-
+        if query_time <= total_time:  # found range
+            return pos_in_range(elev, call_list[i].get("floor"), call_list[i+1].get("floor"), query_time, (total_time - (time_floor2floor(elev, call_list[i].get("floor"), call_list[i+1].get("floor"))))) #step back in total_time
 
 
 def assign_to_elevator(building: Building, call: Call_For_Elevator):  # FINISH THIS
