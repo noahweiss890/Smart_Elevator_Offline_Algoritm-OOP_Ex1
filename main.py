@@ -44,13 +44,20 @@ class Call_For_Elevator:
         return str(["Elevator call", self.time, self.src, self.dest, 0, self.allocated_to])
 
 
-def pos_at_time(elev: Elevator, call_list: list, time: float) -> int:  # FINISH THIS
-    curr_time = 0
-    ans = 0
-    while curr_time < time:
-        pass
+def time_floor2floor(elev: Elevator, a:int, b:int) -> float:
+    return elev.close_time + elev.start_time + (abs(a-b)/elev.speed) + elev.stop_time + elev.open_time
 
-    return ans
+def pos_at_time(elev: Elevator, call_list: list, time: float) -> int:  # FINISH THIS
+    query_time = time
+    total_time = calls_list[0].get("call").time + time_floor2floor(elev, 0, call_list[0].get("floor"))
+    pos = 0
+    for i in range(len(call_list)-1):
+        total_time = total_time + time_floor2floor(elev, call_list[i], call_list[i+1])
+        if query_time <= total_time:
+
+
+
+
 
 
 def assign_to_elevator(building: Building, call: Call_For_Elevator):  # FINISH THIS
