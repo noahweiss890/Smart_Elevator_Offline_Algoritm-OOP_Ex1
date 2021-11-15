@@ -74,7 +74,7 @@ def pos_in_range(elev: Elevator, going_from: int, going_to: int, q_time: float, 
             return floor
 
 
-def pos_at_time(elev: Elevator, call_bank: List[dict], time: float) -> int:
+def pos_at_time(elev: Elevator, call_bank: dict, time: float) -> int:
     query_time = time
     total_time = call_bank[elev.id][0].get("call").time + time_floor2floor(elev, 0, call_bank[elev.id][0].get("floor"))  # start elevator at time first call comes in + time to travel from 0 to first src
     for i in range(len(call_bank[elev.id]) - 1):
@@ -88,12 +88,13 @@ def assign_to_elevator(building: Building, call: CallForElevator) -> None:  # FI
     pass
 
 
-def add_call_to_elevator(call: CallForElevator, elev: Elevator, call_list: list) -> None:  # adds call src and dest to the elevators call list
+def add_call_to_elevator(call: CallForElevator, elev: Elevator, call_bank: dict) -> None:  # adds call src and dest to the elevators call list
+    # curr_list = future_call_list()
     pass
 
 
-def future_call_list(call_list: list, time: float) -> list:  # returns what the call list will look like at the given time
-    return []
+def future_call_list(call_bank: dict, time: float) -> list:  # returns what the call list will look like at the given time
+    pass
 
 
 if __name__ == '__main__':
