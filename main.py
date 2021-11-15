@@ -75,6 +75,26 @@ def pos_in_range(elev: Elevator, going_from: int, going_to: int, q_time: float, 
 
 
 def pos_at_time(elev: Elevator, call_bank: dict, time: float) -> int:
+    """
+    c1 = CallForElevator(["", 15.74901825, 0, -6, 0, 0])
+    c2 = CallForElevator(["", 29.79572499, -4, 80, 0, 0])
+    c3 = CallForElevator(["", 30.19242759, -7, 88, 0, 0])
+    c4 = CallForElevator(["", 30.71595022, -5, 74, 0, 0])
+    call_list = [c1, c2, c3, c4]
+    elv = Elevator({
+        "_id": 0,
+        "_speed": 0.5,
+        "_minFloor": -2,
+        "_maxFloor": 10,
+        "_closeTime": 2.0,
+        "_openTime": 2.0,
+        "_startTime": 3.0,
+        "_stopTime": 3.0
+    })
+    call_bank = {elv.id, call_list}
+
+    >>>pos_at_time(elv, call_bank, 43.0)
+    """
     total_time = call_bank[elev.id][0].get("call").time + time_floor2floor(elev, 0, call_bank[elev.id][0].get("floor"))  # start elevator at time first call comes in + time to travel from 0 to first src
     for i in range(len(call_bank[elev.id]) - 1):
         if time <= total_time + time_floor2floor(elev, call_bank[elev.id][i].get("floor"), call_bank[elev.id][i + 1].get("floor")):  # found range
@@ -104,7 +124,7 @@ def add_floor(src: int, elev_call_list: List[dict], index: int) -> int:  # adds 
     return 0
 
 
-def future_call_list(elev: Elevator, elev_call_list: List[dict], time: float) -> int:
+def future_call_list(elev: Elevator, elev_call_list: List[dict], time: float) -> int: # hey
     # returns an index pointing to what part of
     # the call_list the elevator got to at a certain time
     query_time = time
