@@ -112,16 +112,39 @@ def assign_to_elevator(building: Building, call: CallForElevator) -> None:  # FI
 
 def add_call_to_elevator_bank(call: CallForElevator, elev: Elevator, elev_call_list: List[dict]) -> None:  # adds call src and dest to the elevators call list
     index = future_call_list(elev_call_list, call.time)
-    src_index = add_floor(call.src, elev_call_list, index)
-    add_floor(call.dest, elev_call_list, src_index)
+    src_index = add_floor(call.src, elev_call_list, index, call.time, elev, call)
+    add_floor(call.dest, elev_call_list, src_index, call.time, elev, call)
 
 
-def add_floor(src: int, elev_call_list: List[dict], index: int) -> int:  # adds floor to the elevators call list
-    direction = elev_call_list
+def add_floor(floor: int, elev_call_list: List[dict], index: int, time: float, elev: Elevator, call: CallForElevator) -> int:  # adds floor to the elevators call list
+    if index == 0:
+        direction = "UP" if 0 < elev_call_list[index].get("floor") else "DOWN"
+    else:
+        direction = "UP" if elev_call_list[index-1].get("floor") < elev_call_list[index].get("floor") else "DOWN"
+    pos = pos_at_time(elev, elev_call_list, time)
+    if direction == "UP" and pos < floor < elev_call_list[index].get("floor"):
+        elev_call_list.insert(index, {"floor": floor, "call": call})
+        return index
+    if direction == "DOWN" and pos > floor > elev_call_list[index].get("floor"):
+        elev_call_list.insert(index, {"floor": floor, "call": call})
+        return index
     for i in range(index, len(elev_call_list) - 1):
-        if elev_call_list[i] < elev_call_list[i+1]:
-            pass
-    return 0
+        next_direction = "UP" if elev_call_list[i].get("floor") < elev_call_list[i+1].get("floor") else "DOWN"
+        if direction == "UP" and next_direction == "UP" and elev_call_list[i].get("floor") < floor < elev_call_list[i+1].get("floor"):
+            elev_call_list.insert(i+1, {"floor": floor, "call": call})
+            return i+1
+        if direction == "UP" and next_direction == "DOWN" and (floor > elev_call_list[i].get("floor") or elev_call_list[i].get("floor") > floor > elev_call_list[i+1].get("floor")):
+            elev_call_list.insert(i+1, {"floor": floor, "call": call})
+            return i+1
+        if direction == "DOWN" and next_direction == "DOWN" and elev_call_list[i].get("floor") > floor > elev_call_list[i+1].get("floor"):
+            elev_call_list.insert(i+1, {"floor": floor, "call": call})
+            return i+1
+        if direction == "DOWN" and next_direction == "UP" and (floor < elev_call_list[i].get("floor") or elev_call_list[i].get("floor") < floor < elev_call_list[i+1].get("floor")):
+            elev_call_list.insert(i+1, {"floor": floor, "call": call})
+            return i+1
+        direction = next_direction
+    elev_call_list.append({"floor": floor, "call": call})
+    return len(elev_call_list) - 1
 
 
 def future_call_list(elev: Elevator, elev_call_list: List[dict], time: float) -> int: # hey
@@ -138,6 +161,7 @@ def future_call_list(elev: Elevator, elev_call_list: List[dict], time: float) ->
         if total_time < elev_call_list[i].get("call").time: # there is gap but have not yet found index
             total_time = elev_call_list[i].get("call").time # update
         total_time += time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i + 1].get("floor"))
+
 
 if __name__ == '__main__':
     import doctest
