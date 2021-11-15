@@ -126,7 +126,7 @@ def add_floor(floor: int, elev_call_list: List[dict], index: int, time: float, e
 
 
 def future_call_list(elev_call_list: List[dict], time: float) -> int:  # returns an index pointing to what part of the call_list the elevator got to at a certain time
-    return 0
+    return 1
 
 
 if __name__ == '__main__':
