@@ -155,7 +155,22 @@ if __name__ == '__main__':
         for call in calls_list:
             writer.writerow(call.call_as_list())
 
-    # c = CallForElevator(["", 88, 10, 0, 0, 1])
+    # c1 = CallForElevator(["", 15.74901825, 0, -6, 0, 0])
+    # c2 = CallForElevator(["", 29.79572499, -4, 80, 0, 0])
+    # c3 = CallForElevator(["", 30.19242759, -7, 88, 0, 0])
+    # c4 = CallForElevator(["", 30.71595022, -5, 74, 0, 0])
+    # call_list = [c1, c2, c3, c4]
+    # elv = Elevator({
+    #     "_id": 0,
+    #     "_speed": 0.5,
+    #     "_minFloor": -2,
+    #     "_maxFloor": 10,
+    #     "_closeTime": 2.0,
+    #     "_openTime": 2.0,
+    #     "_startTime": 3.0,
+    #     "_stopTime": 3.0
+    # })
+    # call_bank = {elv.id, call_list}
     # e = Elevator({
     #     "_id": 0,
     #     "_speed": 2.0,
