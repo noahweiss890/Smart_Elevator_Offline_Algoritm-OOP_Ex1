@@ -49,10 +49,12 @@ class CallForElevator:
 def time_floor2floor(elev: Elevator, a: int, b: int) -> float:
     if a == b:
         return 0
-    return elev.close_time + elev.start_time + (abs(a-b)/elev.speed) + elev.stop_time + elev.open_time
+    return elev.close_time + elev.start_time + ceil((abs(a-b)/elev.speed)) + elev.stop_time + elev.open_time
 
 
 def pos_in_range(elev: Elevator, going_from: int, going_to: int, q_time: float, t_time: float) -> int:
+    if going_to == going_from:
+        return going_to
     floor = going_from
     t_time += elev.close_time  # first add close_time and see if that makes a difference
     if t_time >= q_time:
@@ -68,28 +70,27 @@ def pos_in_range(elev: Elevator, going_from: int, going_to: int, q_time: float, 
             t_time += (1/elev.speed)
             floor += 1  # 'pos' increases by one
         if going_from > going_to:  # elevator is going down
-            t_time += (1 / elev.speed)
+            t_time += (1/elev.speed)
             floor -= 1  # 'pos' decreases by one
         if t_time >= q_time:
             return floor
 
 
 def pos_at_time(elev: Elevator, elev_call_list: List[dict], time: float) -> int:
+    if len(elev_call_list) == 0:
+        return 0
+    if len(elev_call_list) == 1 and time > elev_call_list[0].get("call").time + time_floor2floor(elev, 0, elev_call_list[0].get("floor")):
+        return elev_call_list[0].get("floor")
     total_time = elev_call_list[0].get("call").time + time_floor2floor(elev, 0, elev_call_list[0].get("floor"))  # start elevator at time first call comes in + time to travel from 0 to first src
     for i in range(len(elev_call_list) - 1):
-        if time <= total_time + time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i + 1].get("floor")):  # found range
-            return pos_in_range(elev, elev_call_list[i].get("floor"), elev_call_list[i + 1].get("floor"), time, total_time)  # step back in total_time
-        if (total_time < elev_call_list[i + 1].get("call").time) and (time <= elev_call_list[i + 1].get("call").time):  # if there is a gap in the call_bank because of timing and once added the gap, now found range
+        if time <= total_time + time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i+1].get("floor")):  # found range
+            return pos_in_range(elev, elev_call_list[i].get("floor"), elev_call_list[i+1].get("floor"), time, total_time)  # step back in total_time
+        if (total_time < elev_call_list[i+1].get("call").time) and (time <= elev_call_list[i+1].get("call").time):  # if there is a gap in the call_bank because of timing and once added the gap, now found range
             return elev_call_list[i].get("floor")
-        if total_time < elev_call_list[i + 1].get("call").time: # added gap and still haven't found range
-            total_time = elev_call_list[i + 1].get("call").time # update total_time
-        total_time += time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i + 1].get("floor"))
-
-
-# def assign_to_elevator(building: Building, call: CallForElevator) -> None:  # FINISH THIS
-#     fastest_id, fastest_time = fastest_elev(building, call)
-#     ans = fastest_time
-#     call.allocated_to = ans
+        if total_time < elev_call_list[i+1].get("call").time:  # added gap and still haven't found range
+            total_time = elev_call_list[i+1].get("call").time  # update total_time
+        total_time += time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i+1].get("floor"))
+    return elev_call_list[-1].get("floor")
 
 
 def fastest_elev(building: Building, call: CallForElevator, calls_bank: dict) -> (int, float):
@@ -115,21 +116,28 @@ def time_to_complete_call(call: CallForElevator, elev_call_list: List[dict], ele
     time = 0
     i = future_call_list(elev, elev_call_list, call.time)
     if i != -1:
-        time += ceil(abs(pos_at_time(elev, elev_call_list, call.time) - elev_call_list[i].get("floor")) / elev.speed) + elev.stop_time + elev.open_time
-        while i < len(elev_call_list)-1 and elev_call_list[i].get("call") != call and elev_call_list[i].get("floor") != call.dest:
+        if pos_at_time(elev, elev_call_list, call.time) != elev_call_list[i].get("floor"):
+            time += ceil(abs(pos_at_time(elev, elev_call_list, call.time) - elev_call_list[i].get("floor")) / elev.speed) + elev.stop_time + elev.open_time
+        while i < len(elev_call_list)-1:
+            if elev_call_list[i].get("call") == call and elev_call_list[i].get("floor") == call.dest:
+                return time
             time += elev.close_time + elev.start_time + ceil(abs(elev_call_list[i].get("floor") - elev_call_list[i+1].get("floor")) / elev.speed) + elev.stop_time + elev.open_time
+            i += 1
     return time
 
 
 def add_call_to_elevator_bank(call: CallForElevator, elev: Elevator, elev_call_list: List[dict]) -> None:  # adds call src and dest to the elevators call list
     index = future_call_list(elev, elev_call_list, call.time)
     src_index = add_floor(call.src, elev_call_list, index, call.time, elev, call)
-    add_floor(call.dest, elev_call_list, src_index+1, call.time, elev, call)
+    add_floor(call.dest, elev_call_list, src_index, call.time, elev, call)
 
 
 # take care of case where the floor is equal to a floor in the list
 def add_floor(floor: int, elev_call_list: List[dict], index: int, time: float, elev: Elevator, call: CallForElevator) -> int:  # adds floor to the elevators call list
-    if index == 0:
+    if index == -1:
+        elev_call_list.append({"floor": floor, "call": call})
+        return 0
+    elif index == 0:
         direction = "UP" if 0 < elev_call_list[index].get("floor") else "DOWN"
     else:
         direction = "UP" if elev_call_list[index-1].get("floor") < elev_call_list[index].get("floor") else "DOWN"
@@ -160,6 +168,8 @@ def add_floor(floor: int, elev_call_list: List[dict], index: int, time: float, e
 
 
 def future_call_list(elev: Elevator, elev_call_list: List[dict], time: float) -> int:
+    if len(elev_call_list) == 0:
+        return -1
     # returns an index pointing to what part of
     # the call_list the elevator got to at a certain time
     query_time = time
@@ -167,12 +177,13 @@ def future_call_list(elev: Elevator, elev_call_list: List[dict], time: float) ->
     total_time = elev_call_list[0].get("call").time + time_floor2floor(elev, 0, elev_call_list[0].get("floor"))
     for i in range(len(elev_call_list) - 1):
         if query_time <= total_time + time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i + 1].get("floor")):  # found index of curr list
-            return i+1
+            return i
         if (total_time < elev_call_list[i].get("call").time) and time <= elev_call_list[i + 1].get("call").time:  # if there is a gap in the call_bank because of timing and once added the gap, then found index
-            return i+1
+            return i
         if total_time < elev_call_list[i].get("call").time: # there is gap but have not yet found index
             total_time = elev_call_list[i].get("call").time # update
         total_time += time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i + 1].get("floor"))
+    return len(elev_call_list) - 1
 
 
 if __name__ == '__main__':
