@@ -88,13 +88,22 @@ def assign_to_elevator(building: Building, call: CallForElevator) -> None:  # FI
     pass
 
 
-def add_call_to_elevator(call: CallForElevator, elev: Elevator, call_bank: dict) -> None:  # adds call src and dest to the elevators call list
-    # curr_list = future_call_list()
-    pass
+def add_call_to_elevator_bank(call: CallForElevator, elev: Elevator, elev_call_list: List[dict]) -> None:  # adds call src and dest to the elevators call list
+    index = future_call_list(elev_call_list, call.time)
+    src_index = add_floor(call.src, elev_call_list, index)
+    add_floor(call.dest, elev_call_list, src_index)
 
 
-def future_call_list(call_bank: dict, time: float) -> list:  # returns what the call list will look like at the given time
-    pass
+def add_floor(src: int, elev_call_list: List[dict], index: int) -> int:  # adds floor to the elevators call list
+    direction = elev_call_list
+    for i in range(index, len(elev_call_list) - 1):
+        if elev_call_list[i] < elev_call_list[i+1]:
+            pass
+    return 0
+
+
+def future_call_list(elev_call_list: List[dict], time: float) -> int:  # returns an index pointing to what part of the call_list the elevator got to at a certain time
+    return 0
 
 
 if __name__ == '__main__':
