@@ -75,26 +75,6 @@ def pos_in_range(elev: Elevator, going_from: int, going_to: int, q_time: float, 
 
 
 def pos_at_time(elev: Elevator, elev_call_list: List[dict], time: float) -> int:
-    """
-    c1 = CallForElevator(["", 15.74901825, 0, -6, 0, 0])
-    c2 = CallForElevator(["", 29.79572499, -4, 80, 0, 0])
-    c3 = CallForElevator(["", 30.19242759, -7, 88, 0, 0])
-    c4 = CallForElevator(["", 30.71595022, -5, 74, 0, 0])
-    call_list = [c1, c2, c3, c4]
-    elv = Elevator({
-        "_id": 0,
-        "_speed": 0.5,
-        "_minFloor": -2,
-        "_maxFloor": 10,
-        "_closeTime": 2.0,
-        "_openTime": 2.0,
-        "_startTime": 3.0,
-        "_stopTime": 3.0
-    })
-    call_bank = {elv.id, call_list}
-
-    >>>pos_at_time(elv, elev_call_list, 43.0)
-    """
     total_time = elev_call_list[0].get("call").time + time_floor2floor(elev, 0, elev_call_list[0].get("floor"))  # start elevator at time first call comes in + time to travel from 0 to first src
     for i in range(len(elev_call_list) - 1):
         if time <= total_time + time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i + 1].get("floor")):  # found range
@@ -106,16 +86,48 @@ def pos_at_time(elev: Elevator, elev_call_list: List[dict], time: float) -> int:
         total_time += time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i + 1].get("floor"))
 
 
-def assign_to_elevator(building: Building, call: CallForElevator) -> None:  # FINISH THIS
-    pass
+# def assign_to_elevator(building: Building, call: CallForElevator) -> None:  # FINISH THIS
+#     fastest_id, fastest_time = fastest_elev(building, call)
+#     ans = fastest_time
+#     call.allocated_to = ans
+
+
+def fastest_elev(building: Building, call: CallForElevator, calls_bank: dict) -> (int, float):
+    ans = 0
+    temp_elev_call_list = []
+    for floor in calls_bank[building.elevators[0].id]:
+        temp_elev_call_list.append(floor)
+    add_call_to_elevator_bank(call, building.elevators[0], temp_elev_call_list)
+    min_time = time_to_complete_call(call, temp_elev_call_list, building.elevators[0])
+    for elev in building.elevators[1:]:
+        temp_elev_call_list = []
+        for floor in calls_bank[elev.id]:
+            temp_elev_call_list.append(floor)
+        add_call_to_elevator_bank(call, elev, temp_elev_call_list)
+        time = time_to_complete_call(call, temp_elev_call_list, elev)
+        if time < min_time:
+            min_time = time
+            ans = elev.id
+    return ans, min_time
+
+
+def time_to_complete_call(call: CallForElevator, elev_call_list: List[dict], elev: Elevator) -> float:
+    time = 0
+    i = future_call_list(elev, elev_call_list, call.time)
+    if i != -1:
+        time += ceil(abs(pos_at_time(elev, elev_call_list, call.time) - elev_call_list[i].get("floor")) / elev.speed) + elev.stop_time + elev.open_time
+        while i < len(elev_call_list)-1 and elev_call_list[i].get("call") != call and elev_call_list[i].get("floor") != call.dest:
+            time += elev.close_time + elev.start_time + ceil(abs(elev_call_list[i].get("floor") - elev_call_list[i+1].get("floor")) / elev.speed) + elev.stop_time + elev.open_time
+    return time
 
 
 def add_call_to_elevator_bank(call: CallForElevator, elev: Elevator, elev_call_list: List[dict]) -> None:  # adds call src and dest to the elevators call list
-    index = future_call_list(elev_call_list, call.time)
+    index = future_call_list(elev, elev_call_list, call.time)
     src_index = add_floor(call.src, elev_call_list, index, call.time, elev, call)
-    add_floor(call.dest, elev_call_list, src_index, call.time, elev, call)
+    add_floor(call.dest, elev_call_list, src_index+1, call.time, elev, call)
 
 
+# take care of case where the floor is equal to a floor in the list
 def add_floor(floor: int, elev_call_list: List[dict], index: int, time: float, elev: Elevator, call: CallForElevator) -> int:  # adds floor to the elevators call list
     if index == 0:
         direction = "UP" if 0 < elev_call_list[index].get("floor") else "DOWN"
@@ -155,9 +167,9 @@ def future_call_list(elev: Elevator, elev_call_list: List[dict], time: float) ->
     total_time = elev_call_list[0].get("call").time + time_floor2floor(elev, 0, elev_call_list[0].get("floor"))
     for i in range(len(elev_call_list) - 1):
         if query_time <= total_time + time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i + 1].get("floor")):  # found index of curr list
-            return i
+            return i+1
         if (total_time < elev_call_list[i].get("call").time) and time <= elev_call_list[i + 1].get("call").time:  # if there is a gap in the call_bank because of timing and once added the gap, then found index
-            return i
+            return i+1
         if total_time < elev_call_list[i].get("call").time: # there is gap but have not yet found index
             total_time = elev_call_list[i].get("call").time # update
         total_time += time_floor2floor(elev, elev_call_list[i].get("floor"), elev_call_list[i + 1].get("floor"))
@@ -190,12 +202,16 @@ if __name__ == '__main__':
         elevator_calls_bank[i.id] = []
         elevator_floor_calls_bank[i.id] = []
 
-    # for call in calls_list:
-    #     assign_to_elevator(call)
+    for call in calls_list:
+        fastest_id, fastest_time = fastest_elev(building, call, elevator_floor_calls_bank)
+        ans = fastest_id
+        call.allocated_to = ans
+        elevator_calls_bank[ans].append(call)
+        add_call_to_elevator_bank(call, building.elevators[ans], elevator_floor_calls_bank[ans])
 
+    # write updated calls to a new file
     with open("test.csv", "w") as c:
         writer = csv.writer(c)
-        # writer.writerow(calllist)
         for call in calls_list:
             writer.writerow(call.call_as_list())
 
