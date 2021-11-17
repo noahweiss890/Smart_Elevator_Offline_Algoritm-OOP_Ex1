@@ -197,7 +197,6 @@ def on_the_way(building: Building, call: CallForElevator, calls_bank: dict) -> i
 
 
 if __name__ == '__main__':
-    import doctest
 
     # get building from json
     with open(sys.argv[1], "r") as j:  # in order to take all of the elevators from the json
