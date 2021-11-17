@@ -231,7 +231,7 @@ if __name__ == '__main__':
         add_call_to_elevator_bank(call, building.elevators[ans], elevator_floor_calls_bank[ans])
 
     # write updated calls to a new file
-    with open("B5_d.csv", "w") as c:
+    with open(sys.argv[3], "w") as c:
         writer = csv.writer(c)
         for call in calls_list:
             writer.writerow(call.call_as_list())
