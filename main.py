@@ -128,7 +128,6 @@ def add_call_to_elevator_bank(call: CallForElevator, elev: Elevator, elev_call_l
     return add_floor(call.dest, elev_call_list, src_index+1, call, call.src)
 
 
-# take care of case where the floor is equal to a floor in the list
 def add_floor(floor: int, elev_call_list: List[dict], index: int, call: CallForElevator, pos) -> int:  # adds floor to the elevators call list
     if index == -1:
         elev_call_list.append({"floor": floor, "call": call})
@@ -186,8 +185,6 @@ def fastest_elev(building: Building, call: CallForElevator, calls_bank: dict) ->
 
 
 def on_the_way(building: Building, call: CallForElevator, calls_bank: dict) -> int:
-    # ans = -1
-    # time = 10000000
     for elev in building.elevators:
         pos = future_call_list(elev, calls_bank[elev.id], call.time)
         if pos != -1:
@@ -217,9 +214,6 @@ if __name__ == '__main__':
         reader = csv.reader(c)
         calls_list = [CallForElevator(line) for line in reader]
 
-    # for call in call_list:
-    #     call.allocated_to = 0
-
     elevator_calls_bank = {}
     elevator_floor_calls_bank = {}
     for i in building.elevators:
@@ -238,36 +232,7 @@ if __name__ == '__main__':
         add_call_to_elevator_bank(call, building.elevators[ans], elevator_floor_calls_bank[ans])
 
     # write updated calls to a new file
-    with open("B4_Cd.csv", "w") as c:
+    with open("B5_d.csv", "w") as c:
         writer = csv.writer(c)
         for call in calls_list:
             writer.writerow(call.call_as_list())
-
-    # c1 = CallForElevator(["", 15.74901825, 0, -6, 0, 0])
-    # c2 = CallForElevator(["", 29.79572499, -4, 80, 0, 0])
-    # c3 = CallForElevator(["", 30.19242759, -7, 88, 0, 0])
-    # c4 = CallForElevator(["", 30.71595022, -5, 74, 0, 0])
-    # call_list = [c1, c2, c3, c4]
-    # elv = Elevator({
-    #     "_id": 0,
-    #     "_speed": 0.5,
-    #     "_minFloor": -2,
-    #     "_maxFloor": 10,
-    #     "_closeTime": 2.0,
-    #     "_openTime": 2.0,
-    #     "_startTime": 3.0,
-    #     "_stopTime": 3.0
-    # })
-    # call_bank = {elv.id, call_list}
-    # e = Elevator({
-    #     "_id": 0,
-    #     "_speed": 2.0,
-    #     "_minFloor": -2,
-    #     "_maxFloor": 10,
-    #     "_closeTime": 2.0,
-    #     "_openTime": 2.0,
-    #     "_startTime": 3.0,
-    #     "_stopTime": 3.0
-    # })
-    # print(assign_to_elevator(e, c))
-
